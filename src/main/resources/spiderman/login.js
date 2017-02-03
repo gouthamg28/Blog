@@ -41,8 +41,9 @@ $(document).ready(function() {
 				window.location="home.html";
 			},
 			error : function(xhr, ajaxOptions, thrownError) {
-				alert(xhr.status);
-				alert(thrownError);
+				alert(xhr.responseText);
+//				alert(xhr.status+);
+//				alert(thrownError);
 //				window.location="home.html";
 			}
 		});
