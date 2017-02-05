@@ -1,13 +1,10 @@
 package com.cmad.service;
 
-import com.mongodb.util.JSON;
-
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
@@ -105,6 +102,7 @@ public class MainVerticle extends AbstractVerticle {
 		// ------------------------------------------//
 		router.route("/api/login").handler(BodyHandler.create());
 		router.post("/api/login").handler(rctx -> {
+
 			vertx.eventBus().send("com.cisco.cmad.projects.login", rctx.getBodyAsJson(), r -> {
 				System.out.println("MainVerticle.start() message " + r.result().body().toString());
 				rctx.response().setStatusCode(200).end(r.result().body().toString());
@@ -124,8 +122,10 @@ public class MainVerticle extends AbstractVerticle {
 	}
 
 	private static void setRegistrationHandler(Vertx vertx) {
+
 		router.route(Paths.P_REGISTRATION).handler(BodyHandler.create());
 		router.post(Paths.P_REGISTRATION).handler(rctx -> {
+
 			System.out.println("MainVerticle.setRegistrationHandler() inside register ");
 			// String name = rctx.request().getParam("fullName");
 			// String pwd= rctx.request().getParam("pwd");
@@ -138,8 +138,10 @@ public class MainVerticle extends AbstractVerticle {
 				// System.out.println("MainVerticle.setRegistrationHandler() register r.result()
 				// "+r.result());
 				if (r.result() != null) {
-					// System.out.println("MainVerticle.setRegistrationHandler() register
-					// r.result().body() "+r.result().body());
+//					String[] items = (String[]) r.result().body();
+					 System.out.println("MainVerticle.setRegistrationHandler() register r.result().body() "+r.result().body());
+					 System.out.println("MainVerticle.setRegistrationHandler() register r.result().body().getClass() "+r.result().body().getClass());
+//					 System.out.println("MainVerticle.setRegistrationHandler() register r.result().body() "+items[2]);
 					// System.out.println("MainVerticle.setRegistrationHandler() register
 					// r.result().body().toString()
 					// "+r.result().body().toString());
@@ -173,9 +175,8 @@ public class MainVerticle extends AbstractVerticle {
 			 System.out.println("MainVerticle.setProfileUpdateHandler() areaofinterest"+areaofinterest);
 			 
 			vertx.eventBus().send(Topics.PROFILE_UPDATE, rctx.getBodyAsJson(), r -> {
-				// System.out.println("MainVerticle.setProfileUpdateHandler() register r "+r);
-				// System.out.println("MainVerticle.setProfileUpdateHandler() register r.result()
-				// "+r.result());
+				 System.out.println("MainVerticle.setProfileUpdateHandler() AAA register r "+r);
+				 System.out.println("MainVerticle.setProfileUpdateHandler() register r.result() "+r.result());
 				if (r.result() != null) {
 					// System.out.println("MainVerticle.setProfileUpdateHandler() register
 					// r.result().body() "+r.result().body());
@@ -184,7 +185,7 @@ public class MainVerticle extends AbstractVerticle {
 					// "+r.result().body().toString());
 					rctx.response().setStatusCode(200).end(r.result().body().toString());
 				} else {
-					rctx.response().setStatusCode(404).end("User not found to update");
+					rctx.response().setStatusCode(404).end(r.cause().getMessage());
 				}
 			});
 		});

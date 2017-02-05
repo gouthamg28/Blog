@@ -49,7 +49,7 @@ public class UserDetail {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "UserDetail  username: "+username+", fullname: "+", pwd: "+pwd+", phno: "+phno+" "+" areaofinterest: "+areaofinterest;
+		return "UserDetail  username: "+username+", pwd: "+pwd+", fullname: "+fullName+", phno: "+phno+" "+", areaofinterest: "+areaofinterest;
 	}
 	
 }

@@ -2,11 +2,15 @@ package com.cmad.service;
 
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.dao.BasicDAO;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 import com.cmad.infra.MongoService;
 import com.cmad.model.UserDetail;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
 
 public class RegistrationVerticle extends AbstractVerticle {
@@ -18,113 +22,126 @@ public class RegistrationVerticle extends AbstractVerticle {
 	private void handleRegistraion() {
 		vertx.eventBus().consumer(Topics.REGISTRATION, message -> {
 			System.out.println("RegistrationVerticle.handleRegistraion() inside ");
-			UserDetail regData = Json.decodeValue(message.body().toString(), UserDetail.class);
-			if(regData!=null){
-				System.out.println("RegistrationVerticle.handleRegistraion() usrName: "+regData.getUsername());
-				System.out.println("RegistrationVerticle.handleRegistraion() pwd: "+regData.getPwd());
-				System.out.println("RegistrationVerticle.handleRegistraion() FullName: "+regData.getFullName());
-				System.out.println("RegistrationVerticle.handleRegistraion() phone number: "+regData.getPhno());
-				System.out.println("RegistrationVerticle.handleRegistraion() area of interest: "+regData.getAreaofinterest());
+			UserDetail userDetail = Json.decodeValue(message.body().toString(), UserDetail.class);
+			System.out.println("RegistrationVerticle.handleRegistraion() userDetail = "+userDetail);
+			if(userDetail!=null){
+				System.out.println("RegistrationVerticle.handleRegistraion() Fields "+userDetail.toString());
 			}
 
 			Datastore dataStore = MongoService.getDataStore();
 			
-			//None of the fields should be empty
-			if(regData.getFullName() == null || regData.getFullName() == "")	{
-				System.out.println("RegistrationVerticle.handleRegistraion() full name validation failed");
-				message.fail(404, "1. FullName can't be empty");
+			//Performing user name validations
+			if(!performUserNameValidation(message, userDetail, dataStore))
 				return;
-			} else if(regData.getUsername() == null || regData.getUsername() == "")	{
-				System.out.println("RegistrationVerticle.handleRegistraion() user name validation failed");
-				message.fail(404, "2. User name can't be empty");
-				return;
-			} else if(regData.getPwd() == null || regData.getPwd() == "")	{
-				System.out.println("RegistrationVerticle.handleRegistraion() pwd validation failed");
-				message.fail(404, "3. Password can't be empty");
-				return;
-			} else if(regData.getPhno() == null || regData.getPhno() == "")	{
-				System.out.println("RegistrationVerticle.handleRegistraion() ph. no. validation failed");
-				message.fail(404, "4. Phone no. can't be empty");
-				return;
-			} else if(regData.getAreaofinterest() == null || regData.getAreaofinterest() == "")	{
-				System.out.println("RegistrationVerticle.handleRegistraion() area of interest validation failed");
-				message.fail(404, "5. Areaofinterest can't be empty");
-				return;
-			}
-
 			
-			//Validating if similar user already exists
-			long count = dataStore.createQuery(UserDetail.class).field("username").equal(regData.getUsername()).count();
-			System.out.println("RegistrationVerticle.handleRegistraion() count = "+count);
-			if(count > 0)	{
-				System.out.println("RegistrationVerticle.handleRegistraion() user already exists");
-				message.fail(404, "6. User already exists");
+			//Performing other validations
+			if(!performCommonValidations(message, userDetail))
 				return;
-			}
 			
-			System.out.println("RegistrationVerticle.handleRegistraion() index of @ is "+regData.getUsername().indexOf('@'));
-			if(regData.getUsername().indexOf('@')==-1)	{
-				System.out.println("RegistrationVerticle.handleRegistraion() Email validation failed");
-				message.fail(404, "7. No User created due to email vailidation failed");
-				return;
-			}
-
 			BasicDAO<UserDetail, String> dao = new BasicDAO<>(UserDetail.class, dataStore);
-			dao.save(regData);
-			Object user = dao.save(regData);
+			dao.save(userDetail);
+			Object user = dao.save(userDetail);
 
 			MongoService.close();
-			System.out.println("RegistrationVerticle.handleRegistraion() user-id = "+user);
+			System.out.println("RegistrationVerticle.handleRegistraion() user = "+user);
 			System.out.println("RegistrationVerticle.handleRegistraion() user class = "+user.getClass());
 			if(user==null){
-				message.fail(404, "No User created");
-				//				message.reply("No User created");
+				message.fail(404, "X. No User created");
 			}else{
 				message.reply(Json.encodePrettily(user));
 			}
 		});
 	}
-	
+
 	private void handleProfileUpdate() {
 
-		vertx.eventBus().consumer(Topics.REGISTRATION, message -> {
+		vertx.eventBus().consumer(Topics.PROFILE_UPDATE, message -> {
 			System.out.println("RegistrationVerticle.handleProfileUpdate() inside ");
-			UserDetail regData = Json.decodeValue(message.body().toString(), UserDetail.class);
-			if(regData!=null){
-				System.out.println("RegistrationVerticle.handleProfileUpdate() usrName: "+regData.getUsername());
-				System.out.println("RegistrationVerticle.handleProfileUpdate() pwd: "+regData.getPwd());
-				System.out.println("RegistrationVerticle.handleProfileUpdate() FullName: "+regData.getFullName());
-				System.out.println("RegistrationVerticle.handleProfileUpdate() phone number: "+regData.getPhno());
-				System.out.println("RegistrationVerticle.handleProfileUpdate() area of interest: "+regData.getAreaofinterest());
+			UserDetail userDetail = Json.decodeValue(message.body().toString(), UserDetail.class);
+			if(userDetail!=null){
+				System.out.println("RegistrationVerticle.handleProfileUpdate() UserDetail= "+userDetail.toString());
 			}
 
-			if(regData.getUsername().indexOf('@')==-1)	{
-				message.fail(404, "No User created");
+			if(userDetail.getUsername() == null || userDetail.getUsername().trim().isEmpty())	{
+				message.fail(404, "Pr1. User name is not valid");
+				return;
 			}
+			
+			//Performing other validations
+			if(!performCommonValidations(message, userDetail))
+				return;
+			
+			System.out.println("RegistrationVerticle.handleProfileUpdate() common validations passed");
+			
+///////
+			Datastore dataStore = MongoService.getDataStore();
+			Query query = dataStore.createQuery(UserDetail.class).field("username").equal(userDetail.getUsername().trim());
+			UpdateOperations ops = dataStore.createUpdateOperations(UserDetail.class)
+					.set("pwd", userDetail.getPwd())
+					.set("fullName", userDetail.getFullName())
+					.set("phno", userDetail.getPhno())
+					.set("areaofinterest", userDetail.getAreaofinterest());
 
-			BasicDAO<UserDetail, String> dao = new BasicDAO<>(UserDetail.class, MongoService.getDataStore());
-			dao.save(regData);
-			/*Query<UserDetail> query=dao.createQuery();
-			query.
-			query.and(
-					query.criteria("username").equal(loginData.getUsername()),
-					query.criteria("pwd").equal(loginData.getPwd()));*/
-			//			Object user =dao.save(regData).getId();/*query.get()*/;
-			//			System.out.println("RegistrationVerticle.handleProfileUpdate() Before adding "+MongoService.getDataStore().getCount(UserDetail.class));
-			Object user = dao.save(regData);
-			//			System.out.println("RegistrationVerticle.handleProfileUpdate() After adding "+MongoService.getDataStore().getCount(UserDetail.class));
-			//			System.out.println("RegistrationVerticle.handleProfileUpdate() After adding "+MongoService.getDataStore().getByKeys(keys));
-
+			UpdateResults results = dataStore.update(query, ops, false);
+///////			
+			
 			MongoService.close();
-			System.out.println("RegistrationVerticle.handleProfileUpdate() user-id = "+user);
-			System.out.println("RegistrationVerticle.handleProfileUpdate() user class = "+user.getClass());
-			if(user==null){
-				message.fail(404, "No User created");
-				//				message.reply("No User created");
+			System.out.println("RegistrationVerticle.handleProfileUpdate() results = "+results);
+			System.out.println("RegistrationVerticle.handleProfileUpdate() results.getUpdatedCount() = "+results.getUpdatedCount());
+			if(results == null || results.getUpdatedCount() <= 0){
+				message.fail(404, "Pr2. No Record updated as there is no user by name "+userDetail.getUsername().trim());
 			}else{
-				message.reply(Json.encodePrettily(user));
+				message.reply(Json.encodePrettily(results.getUpdatedCount()));
 			}
 		});
 	}
 
+	private boolean performUserNameValidation(Message<Object> message, UserDetail userDetail, Datastore dataStore) {
+		String userName = userDetail.getUsername();
+		
+		if(userName == null || userName.trim().isEmpty())	{
+			System.out.println("RegistrationVerticle.performUserNameValidation() user name validation failed");
+			message.fail(404, "U1. User name can't be empty");
+			return false;
+		}
+		//Validating if similar user already exists
+		long count = dataStore.createQuery(UserDetail.class).field("username").equal(userName.trim()).count();
+		System.out.println("RegistrationVerticle.performUserNameValidation() count = "+count);
+		if(count > 0)	{
+			System.out.println("RegistrationVerticle.performUserNameValidation() same user name already exists");
+			message.fail(404, "U2. User already exists");
+			return false;
+		}
+		
+		int indexOfAt = userName.trim().indexOf('@');
+		System.out.println("RegistrationVerticle.performUserNameValidation() index of @ is "+indexOfAt);
+		if(indexOfAt == -1)	{
+			System.out.println("RegistrationVerticle.performUserNameValidation() Username/Email validation failed");
+			message.fail(404, "U3. Username/Email is not a valid Email id");
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean performCommonValidations(Message message, UserDetail userDetail)	{
+		boolean validationPassed = true;
+		 if(userDetail.getPwd() == null || userDetail.getPwd() == "")	{
+				System.out.println("RegistrationVerticle.performCommonValidations() pwd validation failed");
+				message.fail(404, "C1. Password can't be empty");
+				validationPassed = false;
+			} else if(userDetail.getFullName() == null || userDetail.getFullName() == "")	{
+				System.out.println("RegistrationVerticle.performCommonValidations() full name validation failed");
+				message.fail(404, "C2. FullName can't be empty");
+				validationPassed = false;
+			} else if(userDetail.getPhno() == null || userDetail.getPhno() == "")	{
+				System.out.println("RegistrationVerticle.performCommonValidations() ph. no. validation failed");
+				message.fail(404, "C3. Phone no. can't be empty");
+				validationPassed = false;
+			} else if(userDetail.getAreaofinterest() == null || userDetail.getAreaofinterest() == "")	{
+				System.out.println("RegistrationVerticle.performCommonValidations() area of interest validation failed");
+				message.fail(404, "C4. Areaofinterest can't be empty");
+				validationPassed = false;
+			}
+		 return validationPassed;
+	}
 }

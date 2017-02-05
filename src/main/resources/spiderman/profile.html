@@ -2,6 +2,9 @@
 <html>
 <head>
 <meta charset="ISO-8859-1">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script type="text/javascript" src='login.js'></script>
+<link rel='stylesheet' href='blog.css'>
 <title>r.e.n.d.e.z.v.o.u.s</title>
 </head>
 <body>
@@ -29,32 +32,29 @@
 				<h2>Your Profile</h2>
 				<table>
 					<tr>
-						<td>Name</td>
-						<td><input value='asddf'></td>
+						<td>Full Name</td>
+						<td><input value='asddf' id="fullname"></td>
 					</tr>
 					<tr>
-						<td>User Name</td>
+						<td>Email(Username):</td>
 						<td>kjkjkj</td>
+						<td><input value='' id="email"></td>
 					</tr>
 					<tr>
 						<td>Password</td>
-						<td><input type='password'></td>
+						<td><input type='password' id="pwd"></td>
 					</tr>
 					<tr>
 						<td>Confirm Password</td>
-						<td><input></td>
-					</tr>
-					<tr>
-						<td>Email</td>
-						<td><input value='adf@adf.com'></td>
+						<td><input type='password' id="cpswd"></td>
 					</tr>
 					<tr>
 						<td>Phone Number</td>
-						<td><input value='989898'></td>
+						<td><input value='989898' type="number" id = "phno"></td>
 					</tr>
 					<tr>
 						<td>Areas of Interest</td>
-						<td><select><option>Technology</option>
+						<td><select  id = "areaofinterest"><option>Technology</option>
 								<option>Movies</option>
 								<option>Sports</option></select></td>
 					</tr>
@@ -63,7 +63,7 @@
 						<td>a@b.com, b@c.com</td>
 					</tr>
 					<tr>
-						<td><a href='home.html'>Update</a> | <a href='home.html'>Cancel</a></td>
+						<td><button id="update-profile">Update</button> <button id="cancel-profile">Cancel</button></td>
 					</tr>
 				</table>
 			</td>
@@ -84,9 +84,6 @@
 				<hr /> <textarea></textarea><br />
 				<button>Post Message</button>
 			</td>
-		<tr>
-			<td><a href='index.html'>Register</a> | <a href='index.html'>Register</a></td>
-		</tr>
 	</table>
 </body>
 </html>
