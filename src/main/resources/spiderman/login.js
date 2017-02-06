@@ -10,20 +10,69 @@ $(document).ready(function() {
 		
 		$.ajax({
 			type : 'post',
-			url : 'http://localhost:8080/api/login/',
+			url : 'http://localhost:8080/api/user/login',
 			data: '{"username": "' + $('#uname').val() + '","pwd":"' +$('#pwd').val() + '"}',
 			contentType: "application/json;charset=utf-8",
-			success : function(response) {
+//			success : function(response) {
 //				var data = jQuery.parseJSON(response)
 //				if(response.data.isJSON())	{
 //					alert( "Data Loaded: user found ");
 //				}esle	{
 //					alert( "Data Loaded: no user found ");
 //				}
-				alert( "Data Loaded: "+response);
+//				alert( "Data Loaded: "+response);
+//			}
+			success: function(output, status, xhr) {
+//				alert( "output: " +output);
+//				alert( "status:" +status);
+//				alert( "xhr.responseText: " +xhr.responseText);
+				var a = JSON.parse(xhr.responseText);
+//				alert("After parse:"+a.id)
+				localStorage.setItem("ls-id", a.id);
+				localStorage.setItem("ls-username", a.username);
+				localStorage.setItem("ls-fullName", a.fullName);
+				localStorage.setItem("ls-phno", a.phno);
+				localStorage.setItem("ls-areaofinterest", a.areaofinterest);
+				localStorage.setItem("ls-token", a.token);
+//				alert("From local storage: "+localStorage.getItem("ls-id"))
+				alert("From local storage: "+localStorage.getItem("ls-token"))
+				window.location="home.html";
+			},
+			error : function(xhr, ajaxOptions, thrownError) {
+				alert(xhr.responseText);
 			}
 		});
 	});
+	
+	$('#logout').click(function() {
+
+		$.ajax({
+			type : 'post',
+			url : 'http://localhost:8080/api/user/logout',
+			data: '{"id": "' + localStorage.getItem("ls-id") + '","token":"' + localStorage.getItem("ls-token") + '"}',
+			contentType: "application/json;charset=utf-8",
+			success: function(output, status, xhr) {
+				var a = JSON.parse(xhr.responseText);
+				localStorage.setItem("ls-id", "");
+				localStorage.setItem("ls-username", "");
+				localStorage.setItem("ls-fullName", "");
+				localStorage.setItem("ls-phno", "");
+				localStorage.setItem("ls-areaofinterest", "");
+				localStorage.setItem("ls-token", "");
+				window.location="index.html";
+			},
+			error : function(xhr, ajaxOptions, thrownError) {
+				localStorage.setItem("ls-id", "");
+				localStorage.setItem("ls-username", "");
+				localStorage.setItem("ls-fullName", "");
+				localStorage.setItem("ls-phno", "");
+				localStorage.setItem("ls-areaofinterest", "");
+				localStorage.setItem("ls-token", "");
+				window.location="index.html";
+			}
+		});
+	});
+	
 	$('#register').click(function() {
 		$.ajax({
 			type : 'post',
@@ -61,6 +110,8 @@ $(document).ready(function() {
 				  '","username":"' +$('#email').val() +
 				  '","phno":"' +$('#phno').val() +
 				  '","areaofinterest":"' +$('#areaofinterest').val()+
+				  '","id":"' +localStorage.getItem("ls-id")+
+				  '","token":"' +localStorage.getItem("ls-token")+
 				  '"}',
 			contentType: "application/json;charset=utf-8",
 			success : function(response) {

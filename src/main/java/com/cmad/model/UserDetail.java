@@ -15,6 +15,7 @@ public class UserDetail {
 	private String fullName;
 	private String phno;
 	private String areaofinterest;
+	private String token;
 	
 	public String getUsername() {
 		return username;
@@ -46,10 +47,20 @@ public class UserDetail {
 	public void setAreaofinterest(String areaofinterest) {
 		this.areaofinterest = areaofinterest;
 	}
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
+	}
+	public String getId() {
+		return id;
+	}
+
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "UserDetail  username: "+username+", pwd: "+pwd+", fullname: "+fullName+", phno: "+phno+" "+", areaofinterest: "+areaofinterest;
+		return "UserDetail  username: "+username+", pwd: "+pwd+", fullname: "+fullName+", phno: "+phno+" "+", areaofinterest: "+areaofinterest+", token:"+token;
 	}
 	
 }

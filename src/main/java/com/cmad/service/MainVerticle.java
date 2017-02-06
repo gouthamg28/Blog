@@ -1,5 +1,7 @@
 package com.cmad.service;
 
+import com.cmad.auth.JAuth;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -13,7 +15,9 @@ public class MainVerticle extends AbstractVerticle {
 	
 	private static Router router;
 
-	public void start(Future<Void> future) throws Exception {/*
+	public void start(Future<Void> future) throws Exception {
+		startServer("start()");
+		/*
 
 
 		System.out.println("starting...");
@@ -75,10 +79,9 @@ public class MainVerticle extends AbstractVerticle {
 	//
 
 	*/}
-	
-	public static void main(String[] args) {
 
-		System.out.println("starting...from main");
+	private static void startServer(String str)	{
+		System.out.println("starting...from "+str);
 		Vertx vertx = Vertx.vertx();
 		router = Router.router(vertx);
 		vertx.deployVerticle(RegistrationVerticle.class.getName(), new DeploymentOptions().setWorker(true));
@@ -99,16 +102,11 @@ public class MainVerticle extends AbstractVerticle {
 		
 		setProfileUpdateHandler(vertx);
 		
+		setLoginHandler(vertx);
+		
+		setLogoutHandler(vertx);
 		// ------------------------------------------//
-		router.route("/api/login").handler(BodyHandler.create());
-		router.post("/api/login").handler(rctx -> {
 
-			vertx.eventBus().send("com.cisco.cmad.projects.login", rctx.getBodyAsJson(), r -> {
-				System.out.println("MainVerticle.start() message " + r.result().body().toString());
-				rctx.response().setStatusCode(200).end(r.result().body().toString());
-				// rctx.response().setStatusCode(200).end(Json.encodePrettily(obj));
-			});
-		});
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
 		// ,
 		// result -> {
@@ -118,71 +116,76 @@ public class MainVerticle extends AbstractVerticle {
 		//// future.fail(result.cause());
 		// }
 		// });
-		//
+		//		
+	}
+	
+	public static void main(String[] args) {
+//		String token = JAuth.getJoken("58981c348364f232c07a311e", "e1@", "login", 10000000);
+//		System.out.println("MainVerticle.main() token = "+token);
+//		JAuth.validateJoken(token);
+		startServer("main()");
 	}
 
+	private static void setLoginHandler(Vertx vertx) {
+		router.route(Paths.P_LOGIN).handler(BodyHandler.create());
+		router.post(Paths.P_LOGIN).handler(rctx -> {
+
+			vertx.eventBus().send(Topics.LOGIN, rctx.getBodyAsJson(), r -> {
+				System.out.println("MainVerticle.setLoginHandler() r = "+r);
+				System.out.println("MainVerticle.setLoginHandler() r.result() " + r.result());
+
+				if (r.result() != null) {
+					System.out.println("MainVerticle.setLoginHandler() r.result().body() " + r.result().body());
+					System.out.println("MainVerticle.setLoginHandler() r.result().body().toString() " + r.result().body().toString());
+
+					rctx.response().setStatusCode(200).end(r.result().body().toString());
+				} else {
+					rctx.response().setStatusCode(404).end(r.cause().getMessage());
+				}				
+			});
+		});
+	}
+
+	private static void setLogoutHandler(Vertx vertx) {
+		router.route(Paths.P_LOGOUT).handler(BodyHandler.create());
+		router.post(Paths.P_LOGOUT).handler(rctx -> {
+
+			vertx.eventBus().send(Topics.LOGOUT, rctx.getBodyAsJson(), r -> {
+				System.out.println("MainVerticle.setLogoutHandler() r = "+r);
+				System.out.println("MainVerticle.setLogoutHandler() r.result() " + r.result());
+
+				if (r.result() != null) {
+					System.out.println("MainVerticle.setLogoutHandler() r.result().body() " + r.result().body());
+					System.out.println("MainVerticle.setLogoutHandler() r.result().body().toString() " + r.result().body().toString());
+
+					rctx.response().setStatusCode(200).end(r.result().body().toString());
+				} else {
+					rctx.response().setStatusCode(404).end(r.cause().getMessage());
+				}				
+			});
+		});
+	}
+	
 	private static void setRegistrationHandler(Vertx vertx) {
 
 		router.route(Paths.P_REGISTRATION).handler(BodyHandler.create());
 		router.post(Paths.P_REGISTRATION).handler(rctx -> {
 
-			System.out.println("MainVerticle.setRegistrationHandler() inside register ");
-			// String name = rctx.request().getParam("fullName");
-			// String pwd= rctx.request().getParam("pwd");
-			// String areaofinterest= rctx.request().getParam("areaofinterest");
-			// System.out.println("MainVerticle.setRegistrationHandler() name "+name);
-			// System.out.println("MainVerticle.setRegistrationHandler() pwd "+pwd);
-			// System.out.println("MainVerticle.setRegistrationHandler() areaofinterest"+areaofinterest);
 			vertx.eventBus().send(Topics.REGISTRATION, rctx.getBodyAsJson(), r -> {
-				// System.out.println("MainVerticle.setRegistrationHandler() register r "+r);
-				// System.out.println("MainVerticle.setRegistrationHandler() register r.result()
-				// "+r.result());
 				if (r.result() != null) {
-//					String[] items = (String[]) r.result().body();
-					 System.out.println("MainVerticle.setRegistrationHandler() register r.result().body() "+r.result().body());
-					 System.out.println("MainVerticle.setRegistrationHandler() register r.result().body().getClass() "+r.result().body().getClass());
-//					 System.out.println("MainVerticle.setRegistrationHandler() register r.result().body() "+items[2]);
-					// System.out.println("MainVerticle.setRegistrationHandler() register
-					// r.result().body().toString()
-					// "+r.result().body().toString());
 					rctx.response().setStatusCode(200).end(r.result().body().toString());
 				} else {
 					rctx.response().setStatusCode(404).end(r.cause().getMessage());
 				}
 			});
-			/*
-			 * rctx.response().setStatusCode(200).putHeader("content-type",
-			 * "application/json; charset=utf-8") .end();
-			 */
 		});
 	}
 
 	private static void setProfileUpdateHandler(Vertx vertx) {
 		router.route(Paths.P_PROFILE_UPDATE).handler(BodyHandler.create());
 		router.post(Paths.P_PROFILE_UPDATE).handler(rctx -> {
-			System.out.println("MainVerticle.setProfileUpdateHandler() inside ");
-			 
-			 String username = rctx.request().getParam("username");
-			 String pwd= rctx.request().getParam("pwd");
-			 String fullName= rctx.request().getParam("fullName");
-			 String phno= rctx.request().getParam("phno");
-			 String areaofinterest= rctx.request().getParam("areaofinterest");
-			 
-			 System.out.println("MainVerticle.setProfileUpdateHandler() username "+username);
-			 System.out.println("MainVerticle.setProfileUpdateHandler() pwd "+pwd);
-			 System.out.println("MainVerticle.setProfileUpdateHandler() fullName "+fullName);
-			 System.out.println("MainVerticle.setProfileUpdateHandler() phno "+phno);
-			 System.out.println("MainVerticle.setProfileUpdateHandler() areaofinterest"+areaofinterest);
-			 
 			vertx.eventBus().send(Topics.PROFILE_UPDATE, rctx.getBodyAsJson(), r -> {
-				 System.out.println("MainVerticle.setProfileUpdateHandler() AAA register r "+r);
-				 System.out.println("MainVerticle.setProfileUpdateHandler() register r.result() "+r.result());
 				if (r.result() != null) {
-					// System.out.println("MainVerticle.setProfileUpdateHandler() register
-					// r.result().body() "+r.result().body());
-					// System.out.println("MainVerticle.setProfileUpdateHandler() register
-					// r.result().body().toString()
-					// "+r.result().body().toString());
 					rctx.response().setStatusCode(200).end(r.result().body().toString());
 				} else {
 					rctx.response().setStatusCode(404).end(r.cause().getMessage());

@@ -1,11 +1,15 @@
 package com.cmad.service;
 
+import java.util.List;
+
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
+import com.cmad.auth.TokenValidator;
+import com.cmad.auth.JAuth;
 import com.cmad.infra.MongoService;
 import com.cmad.model.UserDetail;
 
@@ -13,6 +17,9 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
 
+/*
+ * Takes care of registration & profile update usecases
+ */
 public class RegistrationVerticle extends AbstractVerticle {
 	public void start() throws Exception {
 		handleRegistraion();
@@ -56,16 +63,21 @@ public class RegistrationVerticle extends AbstractVerticle {
 	private void handleProfileUpdate() {
 
 		vertx.eventBus().consumer(Topics.PROFILE_UPDATE, message -> {
-			System.out.println("RegistrationVerticle.handleProfileUpdate() inside ");
 			UserDetail userDetail = Json.decodeValue(message.body().toString(), UserDetail.class);
+
 			if(userDetail!=null){
 				System.out.println("RegistrationVerticle.handleProfileUpdate() UserDetail= "+userDetail.toString());
 			}
 
+			Datastore dataStore = MongoService.getDataStore();
+			
 			if(userDetail.getUsername() == null || userDetail.getUsername().trim().isEmpty())	{
-				message.fail(404, "Pr1. User name is not valid");
+				message.fail(404, "Pr1. User name can't be empty");
 				return;
 			}
+			
+			if(!TokenValidator.isValidToken(message, userDetail.getId(), userDetail.getToken(), dataStore))
+				return;
 			
 			//Performing other validations
 			if(!performCommonValidations(message, userDetail))
@@ -74,8 +86,8 @@ public class RegistrationVerticle extends AbstractVerticle {
 			System.out.println("RegistrationVerticle.handleProfileUpdate() common validations passed");
 			
 ///////
-			Datastore dataStore = MongoService.getDataStore();
-			Query query = dataStore.createQuery(UserDetail.class).field("username").equal(userDetail.getUsername().trim());
+			
+			Query query = dataStore.createQuery(UserDetail.class).field("username").equal(userDetail.getUsername());
 			UpdateOperations ops = dataStore.createUpdateOperations(UserDetail.class)
 					.set("pwd", userDetail.getPwd())
 					.set("fullName", userDetail.getFullName())
@@ -89,7 +101,7 @@ public class RegistrationVerticle extends AbstractVerticle {
 			System.out.println("RegistrationVerticle.handleProfileUpdate() results = "+results);
 			System.out.println("RegistrationVerticle.handleProfileUpdate() results.getUpdatedCount() = "+results.getUpdatedCount());
 			if(results == null || results.getUpdatedCount() <= 0){
-				message.fail(404, "Pr2. No Record updated as there is no user by name "+userDetail.getUsername().trim());
+				message.fail(404, "Pr2. No Record updated as there is no user by name "+userDetail.getUsername());
 			}else{
 				message.reply(Json.encodePrettily(results.getUpdatedCount()));
 			}
@@ -105,11 +117,11 @@ public class RegistrationVerticle extends AbstractVerticle {
 			return false;
 		}
 		//Validating if similar user already exists
-		long count = dataStore.createQuery(UserDetail.class).field("username").equal(userName.trim()).count();
+		long count = dataStore.createQuery(UserDetail.class).field("username").equal(userName).count();
 		System.out.println("RegistrationVerticle.performUserNameValidation() count = "+count);
 		if(count > 0)	{
 			System.out.println("RegistrationVerticle.performUserNameValidation() same user name already exists");
-			message.fail(404, "U2. User already exists");
+			message.fail(404, "U2. User by name "+userName +" already exists");
 			return false;
 		}
 		
