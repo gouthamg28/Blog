@@ -2,12 +2,15 @@
 <html>
 <head>
 <meta charset="ISO-8859-1">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script type="text/javascript" src='login.js'></script>
+<link rel='stylesheet' href='blog.css'>
 <title>r.e.n.d.e.z.v.o.u.s</title>
 </head>
 <body>
 	<h1>r.e.n.d.e.z.v.o.u.s</h1>
 	<hr />
-	<a href='new.html'>New Post</a> |
+//	<a href='new.html'>New Post</a> |
 	<input>
 	<a href='search.html'>Search Blog</a> | Invite
 	<input placeholder="email1, email2, email3"> |
@@ -27,8 +30,14 @@
 			</td>
 			<td valign="top" width='50%'>
 				<h2>New Post</h2>
-				<p>Title <input placeholder='title'></p><p>Tags <input placeholder='tags'></p>
-				Post<br/><textarea rows="20" cols="80"></textarea><br/><a href='home.html'>Save</a> | <a href='home.html'>Cancel</a>
+				<p>Title <input placeholder='title' id="blogtitle"></p>
+ 				<p>Tags   
+				<select id = "areaofinterest"><option>Technology</option>
+					<option>Movies</option>
+					<option>Sports</option></select></p>
+
+				Post<br/><textarea rows="20" cols="80" id="blogcontent"></textarea><br/>
+				<a href='home.html' id="save-blog">Save</a> | <a href='home.html'>Cancel</a>
 			</td>
 			<td width="30%" valign="top">
 				<h2>Messages</h2>

@@ -120,7 +120,7 @@ public class LoginVerticle extends AbstractVerticle {
 	 * Generating token which is valid for specified time
 	 */
 	private String generateToken(UserDetail user)	{
-		String token = JAuth.getJoken(user.getId(), user.getUsername(), "login", 240000);
+		String token = JAuth.getJoken(user.getId(), user.getUsername(), "login", 300000);
 		System.out.println("LoginVerticle.getToken() token = "+token);
 		return token;
 	}

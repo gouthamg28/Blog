@@ -123,6 +123,37 @@ $(document).ready(function() {
 			}
 		});
 	});
+
+	$('#save-blog').click(function() {
+		$.ajax({
+			type : 'post',
+			url : 'http://localhost:8080/api/blog/',
+			data: '{"blogTitle": "' + $('#blogtitle').val() +
+				  '","blogContent":"' + $('#blogcontent').val() + 
+				  '","blogAuthorUsername":"' + localStorage.getItem("ls-username") +
+				  '","blogAreaOfInterest":"' +$('#areaofinterest').val()+
+				  '"}',
+			headers: {
+				"id":localStorage.getItem("ls-id"),
+				"token":localStorage.getItem("ls-token")
+				},
+			contentType: "application/json;charset=utf-8",
+
+			success: function(output, status, xhr) {
+				alert( "output: " +output);
+				alert( "status:" +status);
+				alert( "xhr.responseText: " +xhr.responseText);
+//				var a = JSON.parse(xhr.responseText);
+//				alert("After parse:"+a.id)
+//				localStorage.setItem("ls-id", a.id);
+//				alert("From local storage: "+localStorage.getItem("ls-id"))
+				window.location="home.html";
+			},
+			error : function(xhr, ajaxOptions, thrownError) {
+				alert(xhr.responseText);
+			}
+		});
+	});
 	
 	$("cancel").click(function () {
         location.href = "index.html";

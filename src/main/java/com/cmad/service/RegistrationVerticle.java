@@ -1,7 +1,5 @@
 package com.cmad.service;
 
-import java.util.List;
-
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
@@ -9,7 +7,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 import com.cmad.auth.TokenValidator;
-import com.cmad.auth.JAuth;
 import com.cmad.infra.MongoService;
 import com.cmad.model.UserDetail;
 
@@ -46,7 +43,7 @@ public class RegistrationVerticle extends AbstractVerticle {
 				return;
 			
 			BasicDAO<UserDetail, String> dao = new BasicDAO<>(UserDetail.class, dataStore);
-			dao.save(userDetail);
+//			dao.save(userDetail);
 			Object user = dao.save(userDetail);
 
 			MongoService.close();

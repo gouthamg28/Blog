@@ -13,11 +13,11 @@ public interface Topics {
 	public static String LOGOUT = "com.cisco.cmad.projects.logout";
 	
 	/////////Verticle3
-	public static String GET_FAV_POSTS = "com.cisco.cmad.projects.getfavposts";
+	public static String CREATE_NEW_BLOG = "com.cisco.cmad.projects.createnewblog";
+	
+	public static String GET_FAV_BLOGS = "com.cisco.cmad.projects.getfavblogs";
 
 	public static String GET_BLOG_WITH_COMMENTS = "com.cisco.cmad.projects.getblogwithcomments";
-	
-	public static String CREATE_NEW_BLOG = "com.cisco.cmad.projects.createnewblog";
 	
 	public static String SEARCH_BLOGS = "com.cisco.cmad.projects.searchblogs";
 	
