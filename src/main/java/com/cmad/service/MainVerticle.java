@@ -115,6 +115,8 @@ public class MainVerticle extends AbstractVerticle {
 		
 		setBlogCreateHandler(vertx);
 		
+		setRecentBlogFetchHandler(vertx);
+		
 		setBlogFetchHandler(vertx);		
 		// ------------------------------------------//
 
@@ -237,7 +239,21 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 			});
 		});
 	}
-	
+
+	private static void setRecentBlogFetchHandler(Vertx vertx) {
+		System.out.println("MainVerticle.setRecentBlogFetchHandler() entered");
+		router.post(Paths.P_GET_RECENT_BLOG_WITH_COMMENTS).handler(rctx -> {
+			System.out.println("MainVerticle.setRecentBlogFetchHandler() got request");
+			printHTTPServerRequest(rctx);
+			vertx.eventBus().send(Topics.GET_RECENT_BLOG_WITH_COMMENTS, rctx.getBodyAsJson(), r -> {
+				if (r.result() != null) {
+					rctx.response().setStatusCode(200).end(r.result().body().toString());
+				} else {
+					rctx.response().setStatusCode(404).end(r.cause().getMessage());
+				}
+			});
+		});
+	}
 	
 	private static void setBlogFetchHandler(Vertx vertx) {
 		System.out.println("MainVerticle.setBlogFetchHandler() entered");

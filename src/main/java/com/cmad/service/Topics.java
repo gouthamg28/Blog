@@ -15,7 +15,9 @@ public interface Topics {
 	/////////Verticle3
 	public static String CREATE_NEW_BLOG = "com.cisco.cmad.projects.createnewblog";
 	
-	public static String GET_FAV_BLOGS = "com.cisco.cmad.projects.getfavblogs";
+	public static String GET_RECENT_BLOG_WITH_COMMENTS = "com.cisco.cmad.projects.getrecentblogwithcomments";
+	
+	public static String GET_FAV_BLOGS_LIST = "com.cisco.cmad.projects.getfavblogs";
 
 	public static String GET_BLOG_WITH_COMMENTS = "com.cisco.cmad.projects.getblogwithcomments";
 	

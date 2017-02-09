@@ -15,7 +15,9 @@ public interface Paths {
 	/////////Verticle3 - BlogVerticle
 	public static String P_CREATE_NEW_BLOG = "/api/blog/";
 	
-	public static String P_GET_FAV_BLOGS = "/api/blog/favorites";
+	public static String P_GET_RECENT_BLOG_WITH_COMMENTS = "/api/blog/recent";
+	
+	public static String P_GET_FAV_BLOGS_LIST = "/api/blog/favorites";
 
 	public static String P_GET_BLOG_WITH_COMMENTS = "/api/blog/:blogId";
 	

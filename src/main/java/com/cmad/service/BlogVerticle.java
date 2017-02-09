@@ -1,9 +1,12 @@
 package com.cmad.service;
 
+import java.util.List;
+
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 import com.cmad.infra.MongoService;
 import com.cmad.model.Blog;
@@ -22,10 +25,19 @@ import io.vertx.core.json.Json;
 public class BlogVerticle  extends AbstractVerticle {
 
 	public void start() throws Exception {
+		//To create a new blog
 		handleNewBlogCreation();
+		
+		//To fetch recent blog available in DB
+		handleFetchRecentBlog();
+		
+		//To fetch a existing blog when client passes blog-id
 		handleFetchBlog();
 	}
 
+	/*
+	 * To create a new blog
+	 */
 	private void handleNewBlogCreation() {
 		vertx.eventBus().consumer(Topics.CREATE_NEW_BLOG, message -> {
 			System.out.println("BlogVerticle.handleNewBlogCreation() inside --> "+message.body().toString());
@@ -54,7 +66,40 @@ public class BlogVerticle  extends AbstractVerticle {
 			}
 		});
 	}
-	
+	/*
+	 * To fetch recent blog available in DB
+	 */
+	private void handleFetchRecentBlog() {
+		vertx.eventBus().consumer(Topics.GET_RECENT_BLOG_WITH_COMMENTS, message -> {
+
+			Datastore datastore = MongoService.getDataStore();
+			
+//			BasicDAO<Blog, String> dao = new BasicDAO<>(Blog.class, datastore);
+
+			final Query<Blog> blogFetchQuery = datastore.createQuery(Blog.class).order(Sort.descending("blogCreatedTimeStamp"));
+					
+			final List<Blog> blogs = blogFetchQuery.asList();
+			System.out.println("BlogVerticle.handleFetchRecentBlog() blogs = "+blogs);
+
+			Blog recentBlog = null;
+			if(blogs != null && blogs.size() > 0)	{
+				recentBlog = blogs.get(0);
+			}
+			
+			System.out.println("BlogVerticle.handleFetchBlog() recentBlog = "+recentBlog);
+			if(recentBlog == null)	{
+				message.fail(404, "X. No Blog available");
+			}	else	{
+				message.reply(Json.encodePrettily(recentBlog));
+			}
+
+			MongoService.close();
+		});
+	}
+
+	/*
+	 * To fetch a existing blog when client passes blog-id
+	 */
 	private void handleFetchBlog() {
 		vertx.eventBus().consumer(Topics.GET_BLOG_WITH_COMMENTS, message -> {
 			String blodId = message.body().toString();

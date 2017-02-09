@@ -2,7 +2,7 @@ $(document).ready(function() {
 
 		$.ajax({
 			type : 'post',
-			url : 'http://localhost:8080/api/blog/'+'589b0561e58b9e15f0dc92c0',
+			url : 'http://localhost:8080/api/blog/recent',
 			// data: '{"username": "' + $('#uname').val() + '","pwd":"' +$('#pwd').val() + '"}',
 			headers: {
 				"id":localStorage.getItem("ls-id"),
