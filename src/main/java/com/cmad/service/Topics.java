@@ -23,5 +23,5 @@ public interface Topics {
 	
 	public static String SEARCH_BLOGS = "com.cisco.cmad.projects.searchblogs";
 	
-	public static String ADD_COMMENTS = "com.cisco.cmad.projects.addcomment";
+	public static String UPDATE_COMMENTS = "com.cisco.cmad.projects.updatecomment";
 }

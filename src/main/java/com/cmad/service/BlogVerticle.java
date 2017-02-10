@@ -1,5 +1,7 @@
 package com.cmad.service;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -8,14 +10,19 @@ import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
+import com.cmad.auth.TokenValidator;
 import com.cmad.infra.MongoService;
 import com.cmad.model.Blog;
 import com.cmad.model.UserDetail;
+import com.cmad.model.dto.CommentDTO;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 
 /*
  * Takes care of following use cases
@@ -39,6 +46,9 @@ public class BlogVerticle  extends AbstractVerticle {
 		
 		//To fetch a existing blog when client passes blog-id
 		handleFetchBlog();
+		
+		//To update comments on existing blogs
+		handleUpdateComments();
 	}
 
 	/*
@@ -59,11 +69,6 @@ public class BlogVerticle  extends AbstractVerticle {
 			if(!isValidBlog(message, newBlog))
 				return;
 
-			
-			//Performing token validation
-//			if(!TokenValidator.isValidToken(message, userDetail.getId(), userDetail.getToken(), dataStore))
-//				return;
-			
 			BasicDAO<Blog, String> dao = new BasicDAO<>(Blog.class, dataStore);
 			Object blog = dao.save(newBlog);
 
@@ -106,6 +111,7 @@ public class BlogVerticle  extends AbstractVerticle {
 			MongoService.close();
 		});
 	}
+
 	/*
 	 * To fetch favorite blogs 
 	 */
@@ -127,7 +133,6 @@ public class BlogVerticle  extends AbstractVerticle {
 				final Query<Blog> favBlogsFetchQuery = datastore.createQuery(Blog.class)
 						.field("blogAreaOfInterest").equal(user.getAreaofinterest());
 				final List<Blog> favBlogs = favBlogsFetchQuery.asList();
-//				Blog actualBlog  = favBlogsFetchQuery.get();
 				
 				System.out.println("BlogVerticle.handleFetchBlog() --> favBlogs = "+favBlogs);
 				if(favBlogs == null || favBlogs.size() <= 0)	{
@@ -166,6 +171,7 @@ public class BlogVerticle  extends AbstractVerticle {
 			Blog actualBlog  = blogFetchQuery.get();
 			
 			System.out.println("BlogVerticle.handleFetchBlog() actualBlog = "+actualBlog);
+			System.out.println("BlogVerticle.handleFetchBlog() its comments = "+actualBlog.getComments());
 			if(actualBlog == null)	{
 				message.fail(404, "X. Blog with id "+blodId+" is not available");
 			}	else	{
@@ -173,6 +179,40 @@ public class BlogVerticle  extends AbstractVerticle {
 			}
 
 			MongoService.close();
+		});
+	}
+
+	/*
+	 * To update comments on existing blogs
+	 */
+	private void handleUpdateComments() {
+		vertx.eventBus().consumer(Topics.UPDATE_COMMENTS, message -> {
+			String blogId = (String) ((JsonObject)message.body()).getValue("blogId");
+			JsonObject comData = (JsonObject) ((JsonObject)message.body()).getValue("commentData");
+			CommentDTO commentDTO = Json.decodeValue(comData.toString(), CommentDTO.class);
+
+			Datastore dataStore = MongoService.getDataStore();
+			
+			//Performing validations
+			if(!isValidComment(message, commentDTO))
+				return;
+			
+///////
+			Query query = dataStore.createQuery(Blog.class).field("blog_id").equal(blogId);
+
+			UpdateOperations ops = dataStore.createUpdateOperations(Blog.class)
+					.push("comments", commentDTO);
+
+			UpdateResults results = dataStore.update(query, ops, false);
+///////			
+			
+			MongoService.close();
+
+			if(results == null || results.getUpdatedCount() <= 0){
+				message.fail(404, "Pr2. No Record updated as there is no blog with id "+blogId);
+			}else{
+				message.reply(Json.encodePrettily(commentDTO));
+			}
 		});
 	}
 	
@@ -196,6 +236,24 @@ public class BlogVerticle  extends AbstractVerticle {
 				isValidBlog = false;
 			}
 		 return isValidBlog;
-
 	}
+	
+	private boolean isValidComment(Message<Object> message, CommentDTO commentDTO) {
+		boolean isValidBlog = true;
+		 /*if(commentDTO.getBlog_id() == null || commentDTO.getBlog_id() == "")	{
+				System.out.println("BlogVerticle.isValidComment() Blog Id can't be empty");
+				message.fail(404, "C1. Blog Id can't be empty");
+				isValidBlog = false;
+			} else */if(commentDTO.getCommentAuthorUsername() == null || commentDTO.getCommentAuthorUsername() == "")	{
+				System.out.println("BlogVerticle.isValidComment() Comment author can't be empty");
+				message.fail(404, "C2. Comment author can't be empty");
+				isValidBlog = false;
+			} else if(commentDTO.getCommentText() == null || commentDTO.getCommentText() == "")	{
+				System.out.println("BlogVerticle.isValidComment() Comment Text can't be empty");
+				message.fail(404, "C3. Comment Text can't be empty");
+				isValidBlog = false;
+			}
+		 return isValidBlog;
+	}
+
 }

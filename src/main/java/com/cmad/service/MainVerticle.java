@@ -12,6 +12,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -119,7 +120,9 @@ public class MainVerticle extends AbstractVerticle {
 		
 		setFavoriteBlogsFetchHandler(vertx);
 		
-		setBlogFetchHandler(vertx);		
+		setBlogFetchHandler(vertx);
+		
+		setUpdateCommentsHandler(vertx);
 		// ------------------------------------------//
 
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
@@ -138,9 +141,11 @@ public class MainVerticle extends AbstractVerticle {
 //		String token = JAuth.getJoken("58981c348364f232c07a311e", "e1@", "login", 10000000);
 //		System.out.println("MainVerticle.main() token = "+token);
 //		JAuth.validateJoken(token);
+		
+		
 		startServer("main()");
 	}
-
+	
 	private static void setLoginHandler(Vertx vertx) {
 System.out.println("MainVerticle.setLoginHandler() entered");		
 		router.route(Paths.P_LOGIN).handler(BodyHandler.create());
@@ -291,7 +296,7 @@ System.out.println("MainVerticle.setBlogFetchHandler() entered");
 //		router.route(Paths.P_GET_BLOG_WITH_COMMENTS).handler(BodyHandler.create());
 		router.post(Paths.P_GET_BLOG_WITH_COMMENTS).handler(rctx -> {
 			System.out.println("MainVerticle.setBlogFetchHandler() got request");
-			printHTTPServerRequest(rctx);
+//			printHTTPServerRequest(rctx);
 			String blogId = rctx.pathParams().get("blogId");
 			System.out.println("MainVerticle.setBlogFetchHandler() blogId = "+blogId);
 			vertx.eventBus().send(Topics.GET_BLOG_WITH_COMMENTS, blogId, r -> {
@@ -303,6 +308,36 @@ System.out.println("MainVerticle.setBlogFetchHandler() entered");
 			});
 		});
 	}
+	
+	private static void setUpdateCommentsHandler(Vertx vertx) {
+		System.out.println("MainVerticle.setUpdateCommentsHandler() entered");		
+		router.route(Paths.P_UPDATE_COMMENTS).handler(BodyHandler.create());
+		router.post(Paths.P_UPDATE_COMMENTS).handler(rctx -> {
+			
+			System.out.println("MainVerticle.setUpdateCommentsHandler() Got request");			
+//			printHTTPServerRequest(rctx);
+
+//			if(!validateToken(rctx))	{
+//				rctx.response().setStatusCode(404).end("Token authentication failed for updating comments please Re-login");
+//				return;
+//			}
+			
+			JsonObject tempJsonObj = new JsonObject();
+			String blog_Id = rctx.pathParams().get("blogId");
+			System.out.println("MainVerticle.setUpdateCommentsHandler() blog_Id:-->"+blog_Id);
+			tempJsonObj.put("blogId", blog_Id);
+			tempJsonObj.put("commentData", rctx.getBodyAsJson());
+
+			vertx.eventBus().send(Topics.UPDATE_COMMENTS, tempJsonObj, r -> {
+				if (r.result() != null) {
+					rctx.response().setStatusCode(200).end(r.result().body().toString());
+				} else {
+					rctx.response().setStatusCode(404).end(r.cause().getMessage());
+				}
+			});
+		});
+	}
+
 	
 //	Performing token validation
 	private static boolean validateToken(RoutingContext rctx)	{

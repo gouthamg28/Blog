@@ -59,6 +59,7 @@ $(document).ready(function() {
 				localStorage.setItem("ls-phno", "");
 				localStorage.setItem("ls-areaofinterest", "");
 				localStorage.setItem("ls-token", "");
+				localStorage.setItem("ls-currentBlogId", "");
 				window.location="index.html";
 			},
 			error : function(xhr, ajaxOptions, thrownError) {
@@ -68,6 +69,7 @@ $(document).ready(function() {
 				localStorage.setItem("ls-phno", "");
 				localStorage.setItem("ls-areaofinterest", "");
 				localStorage.setItem("ls-token", "");
+				localStorage.setItem("ls-currentBlogId", "");
 				window.location="index.html";
 			}
 		});

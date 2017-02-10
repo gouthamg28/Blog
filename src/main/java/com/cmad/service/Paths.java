@@ -23,5 +23,5 @@ public interface Paths {
 	
 	public static String P_SEARCH_BLOGS = "/api/blog/searchblogs/:searchText";
 	
-	public static String P_ADD_COMMENTS = "/api/blog/comment/:blogId";
+	public static String P_UPDATE_COMMENTS = "/api/blog/comment/:blogId";
 }

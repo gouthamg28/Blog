@@ -1,6 +1,7 @@
 package com.cmad.model;
 
 import java.util.Date;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
@@ -18,6 +19,7 @@ public class Blog {
 		private String blogAuthorUsername;
 		private Date blogCreatedTimeStamp;
 		private String blogAreaOfInterest;
+		private List comments;
 
 	
 		public String getBlog_id() {
@@ -50,7 +52,12 @@ public class Blog {
 		public void setBlogAreaOfInterest(String blogAreaOfInterest) {
 			this.blogAreaOfInterest = blogAreaOfInterest;
 		}
-		
+		public List getComments() {
+			return comments;
+		}
+		public void setComments(List comments) {
+			this.comments = comments;
+		}		
 		@PrePersist
 		public void prePersist(){
 			blogCreatedTimeStamp = (blogCreatedTimeStamp==null)?new Date():blogCreatedTimeStamp;
