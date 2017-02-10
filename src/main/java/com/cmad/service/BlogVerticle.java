@@ -1,5 +1,6 @@
 package com.cmad.service;
 
+import java.util.Hashtable;
 import java.util.List;
 
 import org.mongodb.morphia.Datastore;
@@ -10,8 +11,10 @@ import org.mongodb.morphia.query.Sort;
 
 import com.cmad.infra.MongoService;
 import com.cmad.model.Blog;
+import com.cmad.model.UserDetail;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
 
 /*
@@ -31,6 +34,9 @@ public class BlogVerticle  extends AbstractVerticle {
 		//To fetch recent blog available in DB
 		handleFetchRecentBlog();
 		
+		//To fetch favorite blogs 
+		handleFetchFavoriteBlogsList();
+		
 		//To fetch a existing blog when client passes blog-id
 		handleFetchBlog();
 	}
@@ -49,6 +55,11 @@ public class BlogVerticle  extends AbstractVerticle {
 
 			Datastore dataStore = MongoService.getDataStore();
 			
+			//Performing validations
+			if(!isValidBlog(message, newBlog))
+				return;
+
+			
 			//Performing token validation
 //			if(!TokenValidator.isValidToken(message, userDetail.getId(), userDetail.getToken(), dataStore))
 //				return;
@@ -66,6 +77,7 @@ public class BlogVerticle  extends AbstractVerticle {
 			}
 		});
 	}
+
 	/*
 	 * To fetch recent blog available in DB
 	 */
@@ -74,8 +86,6 @@ public class BlogVerticle  extends AbstractVerticle {
 
 			Datastore datastore = MongoService.getDataStore();
 			
-//			BasicDAO<Blog, String> dao = new BasicDAO<>(Blog.class, datastore);
-
 			final Query<Blog> blogFetchQuery = datastore.createQuery(Blog.class).order(Sort.descending("blogCreatedTimeStamp"));
 					
 			final List<Blog> blogs = blogFetchQuery.asList();
@@ -96,6 +106,50 @@ public class BlogVerticle  extends AbstractVerticle {
 			MongoService.close();
 		});
 	}
+	/*
+	 * To fetch favorite blogs 
+	 */
+	private void handleFetchFavoriteBlogsList() {
+		vertx.eventBus().consumer(Topics.GET_FAV_BLOGS_LIST, message -> {
+			System.out.println("BlogVerticle.handleFetchFavoriteBlogsList() message="+message);
+			System.out.println("BlogVerticle.handleFetchFavoriteBlogsList() message.body()="+message.body());
+			String userId = message.body().toString();
+			System.out.println("BlogVerticle.handleFetchBlog() inside --> userId = "+userId);
+
+			Datastore datastore = MongoService.getDataStore();
+			
+			final Query<UserDetail> userDetailQuery = datastore.createQuery(UserDetail.class).field(Mapper.ID_KEY).equal(userId);
+			UserDetail user  = userDetailQuery.get();
+			
+			System.out.println("BlogVerticle.handleFetchFavoriteBlogsList() --> user= "+user);
+			
+			if(user != null)	{
+				final Query<Blog> favBlogsFetchQuery = datastore.createQuery(Blog.class)
+						.field("blogAreaOfInterest").equal(user.getAreaofinterest());
+				final List<Blog> favBlogs = favBlogsFetchQuery.asList();
+//				Blog actualBlog  = favBlogsFetchQuery.get();
+				
+				System.out.println("BlogVerticle.handleFetchBlog() --> favBlogs = "+favBlogs);
+				if(favBlogs == null || favBlogs.size() <= 0)	{
+					message.fail(404, "No Favorite blogs available");
+				}	else	{
+					System.out.println("BlogVerticle.handleFetchFavoriteBlogsList() favBlogs.size()= "+favBlogs.size());
+//					String results = "";
+					Hashtable results = new Hashtable();
+					Blog tempBlog;
+					for(int i=0; i<favBlogs.size(); i++)	{
+						tempBlog = favBlogs.get(i);
+//						results = results + tempBlog.getBlog_id() + ":" + tempBlog.getBlogTitle() + ", ";
+						results.put(tempBlog.getBlog_id(), tempBlog.getBlogTitle());
+					}
+//					message.reply(Json.encodePrettily(favBlogs));
+					message.reply(Json.encodePrettily(results));
+				}				
+			}
+
+			MongoService.close();
+		});
+	}
 
 	/*
 	 * To fetch a existing blog when client passes blog-id
@@ -104,22 +158,11 @@ public class BlogVerticle  extends AbstractVerticle {
 		vertx.eventBus().consumer(Topics.GET_BLOG_WITH_COMMENTS, message -> {
 			String blodId = message.body().toString();
 			System.out.println("BlogVerticle.handleFetchBlog() inside --> blodId = "+blodId);
-//			if(blodId != null){
-//				System.out.println("BlogVerticle.handleFetchBlog() newBlog= "+newBlog.toString());
-//				System.out.println("BlogVerticle.handleFetchBlog() newBlog.getBlogContent() "+newBlog.getBlogContent());
-//			}
 
 			Datastore datastore = MongoService.getDataStore();
 			
-			//Performing token validation
-//			if(!performCommonValidations(message, userDetail))
-//				return;
-			
-//			BasicDAO<Blog, String> dao = new BasicDAO<>(Blog.class, datastore);
-
 			final Query<Blog> blogFetchQuery = datastore.createQuery(Blog.class)
 					.field(Mapper.ID_KEY).equal(blodId);
-//			final List<Blog> blogs = blogFetchQuery.asList();
 			Blog actualBlog  = blogFetchQuery.get();
 			
 			System.out.println("BlogVerticle.handleFetchBlog() actualBlog = "+actualBlog);
@@ -132,5 +175,27 @@ public class BlogVerticle  extends AbstractVerticle {
 			MongoService.close();
 		});
 	}
+	
+	private boolean isValidBlog(Message<Object> message, Blog newBlog) {
+		boolean isValidBlog = true;
+		 if(newBlog.getBlogTitle() == null || newBlog.getBlogTitle() == "")	{
+				System.out.println("BlogVerticle.isValidBlog() Blog Title can't be empty");
+				message.fail(404, "B1. Blog Title can't be empty");
+				isValidBlog = false;
+			} else if(newBlog.getBlogContent() == null || newBlog.getBlogContent() == "")	{
+				System.out.println("BlogVerticle.isValidBlog() Blog content can't be empty");
+				message.fail(404, "B2. Blog content can't be empty");
+				isValidBlog = false;
+			} else if(newBlog.getBlogAuthorUsername() == null || newBlog.getBlogAuthorUsername() == "")	{
+				System.out.println("BlogVerticle.isValidBlog() Blog Author can't be empty");
+				message.fail(404, "B3. Blog Author can't be empty");
+				isValidBlog = false;
+			} else if(newBlog.getBlogAreaOfInterest() == null || newBlog.getBlogAreaOfInterest() == "")	{
+				System.out.println("BlogVerticle.isValidBlog() Blog AreaOfInterest can't be empty");
+				message.fail(404, "B4. Blog AreaOfInterest can't be empty");
+				isValidBlog = false;
+			}
+		 return isValidBlog;
 
+	}
 }

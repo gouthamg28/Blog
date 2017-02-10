@@ -117,6 +117,8 @@ public class MainVerticle extends AbstractVerticle {
 		
 		setRecentBlogFetchHandler(vertx);
 		
+		setFavoriteBlogsFetchHandler(vertx);
+		
 		setBlogFetchHandler(vertx);		
 		// ------------------------------------------//
 
@@ -140,6 +142,7 @@ public class MainVerticle extends AbstractVerticle {
 	}
 
 	private static void setLoginHandler(Vertx vertx) {
+System.out.println("MainVerticle.setLoginHandler() entered");		
 		router.route(Paths.P_LOGIN).handler(BodyHandler.create());
 		router.post(Paths.P_LOGIN).handler(rctx -> {
 System.out.println("MainVerticle.setLoginHandler() got request");			
@@ -162,6 +165,7 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 	}
 
 	private static void setLogoutHandler(Vertx vertx) {
+System.out.println("MainVerticle.setLogoutHandler() entered");		
 		router.route(Paths.P_LOGOUT).handler(BodyHandler.create());
 		router.post(Paths.P_LOGOUT).handler(rctx -> {
 
@@ -182,7 +186,7 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 	}
 	
 	private static void setRegistrationHandler(Vertx vertx) {
-
+System.out.println("MainVerticle.setRegistrationHandler() entered");
 		router.route(Paths.P_REGISTRATION).handler(BodyHandler.create());
 		router.post(Paths.P_REGISTRATION).handler(rctx -> {
 
@@ -197,6 +201,7 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 	}
 
 	private static void setProfileUpdateHandler(Vertx vertx) {
+System.out.println("MainVerticle.setProfileUpdateHandler() entered");		
 		router.route(Paths.P_PROFILE_UPDATE).handler(BodyHandler.create());
 		router.post(Paths.P_PROFILE_UPDATE).handler(rctx -> {
 			
@@ -219,6 +224,7 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 	}
 	
 	private static void setBlogCreateHandler(Vertx vertx) {
+System.out.println("MainVerticle.setBlogCreateHandler() entered");		
 		router.route(Paths.P_CREATE_NEW_BLOG).handler(BodyHandler.create());
 		router.post(Paths.P_CREATE_NEW_BLOG).handler(rctx -> {
 
@@ -231,6 +237,13 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 			}
 
 			vertx.eventBus().send(Topics.CREATE_NEW_BLOG, rctx.getBodyAsJson(), r -> {
+//System.out.println("MainVerticle.setBlogCreateHandler() r = "+r);
+//if(r != null)	{
+//	System.out.println("MainVerticle.setBlogCreateHandler() r.result() = "+r.result());
+//	if(r.result() != null)		{
+//		System.out.println("MainVerticle.setBlogCreateHandler() r.result().body() = "+r.result().body());
+//	}
+//}
 				if (r.result() != null) {
 					rctx.response().setStatusCode(200).end(r.result().body().toString());
 				} else {
@@ -241,7 +254,7 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 	}
 
 	private static void setRecentBlogFetchHandler(Vertx vertx) {
-		System.out.println("MainVerticle.setRecentBlogFetchHandler() entered");
+System.out.println("MainVerticle.setRecentBlogFetchHandler() entered");
 		router.post(Paths.P_GET_RECENT_BLOG_WITH_COMMENTS).handler(rctx -> {
 			System.out.println("MainVerticle.setRecentBlogFetchHandler() got request");
 			printHTTPServerRequest(rctx);
@@ -254,9 +267,27 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 			});
 		});
 	}
+
+	private static void setFavoriteBlogsFetchHandler(Vertx vertx) {
+System.out.println("MainVerticle.setFavoriteBlogsFetchHandler() entered");
+//		router.route(Paths.P_GET_BLOG_WITH_COMMENTS).handler(BodyHandler.create());
+		router.post(Paths.P_GET_FAV_BLOGS_LIST).handler(rctx -> {
+			System.out.println("MainVerticle.setFavoriteBlogsFetchHandler() got request");
+			printHTTPServerRequest(rctx);
+			String uId = rctx.pathParams().get("userId");
+			System.out.println("MainVerticle.setFavoriteBlogsFetchHandler() uId = "+uId);
+			vertx.eventBus().send(Topics.GET_FAV_BLOGS_LIST, uId, r -> {
+				if (r.result() != null) {
+					rctx.response().setStatusCode(200).end(r.result().body().toString());
+				} else {
+					rctx.response().setStatusCode(404).end(r.cause().getMessage());
+				}
+			});
+		});
+	}
 	
 	private static void setBlogFetchHandler(Vertx vertx) {
-		System.out.println("MainVerticle.setBlogFetchHandler() entered");
+System.out.println("MainVerticle.setBlogFetchHandler() entered");
 //		router.route(Paths.P_GET_BLOG_WITH_COMMENTS).handler(BodyHandler.create());
 		router.post(Paths.P_GET_BLOG_WITH_COMMENTS).handler(rctx -> {
 			System.out.println("MainVerticle.setBlogFetchHandler() got request");
@@ -272,7 +303,7 @@ System.out.println("MainVerticle.setLoginHandler() got request");
 			});
 		});
 	}
-
+	
 //	Performing token validation
 	private static boolean validateToken(RoutingContext rctx)	{
 		boolean isValid = false;

@@ -23,7 +23,7 @@ $(document).ready(function() {
 //				alert( "Data Loaded: "+response);
 //			}
 			success: function(output, status, xhr) {
-//				alert( "output: " +output);
+				alert( "output: " +output);
 //				alert( "status:" +status);
 //				alert( "xhr.responseText: " +xhr.responseText);
 				var a = JSON.parse(xhr.responseText);
@@ -140,9 +140,9 @@ $(document).ready(function() {
 			contentType: "application/json;charset=utf-8",
 
 			success: function(output, status, xhr) {
-				alert( "output: " +output);
-				alert( "status:" +status);
-				alert( "xhr.responseText: " +xhr.responseText);
+//				alert( "output: " +output);
+//				alert( "status:" +status);
+//				alert( "xhr.responseText: " +xhr.responseText);
 //				var a = JSON.parse(xhr.responseText);
 //				alert("After parse:"+a.id)
 //				localStorage.setItem("ls-id", a.id);
