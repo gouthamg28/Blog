@@ -8,6 +8,66 @@
 <link rel='stylesheet' href='blog.css'>
 </head>
 <body>
+
+	<script type="text/javascript">
+		var $chatWindow;
+		var ws;
+
+		connectToChatserver()
+		
+        function connectToChatserver()
+         {
+            if ("WebSocket" in window)
+            {
+               // Let us open a web socket
+               ws = new WebSocket("ws://localhost:8080/chat");
+				
+               ws.onopen = function()
+               {
+                  // Web Socket is connected, send data using send()
+                  ws.send("Message to send");
+                  alert("Message is sent...");
+               };
+				
+               ws.onmessage = function (evt) 
+               { 
+	              var received_msg = evt.data; 
+	              console.log(received_msg);
+
+				var table = document.getElementById("responseTable");
+				var row = table.insertRow(0);
+				var cell1 = row.insertCell(0);
+				cell1.innerHTML = received_msg;
+
+               };
+				
+               ws.onclose = function()
+               { 
+                  alert("Connection is closed..."); 
+               };
+            }
+            
+            else
+            {
+               // The browser doesn't support WebSocket
+               alert("WebSocket NOT supported by your Browser!");
+            }
+         }
+
+		function sendMessage()	{
+			var msg = document.getElementById("message").value;
+			var user = localStorage.getItem("ls-fullName");
+			
+			if (msg != "") {
+				console.log(msg);
+				console.log(user);
+				ws.send("user: "+user+" message: "+msg);   
+			} 
+		}
+         
+	</script>
+
+
 	<h1>r.e.n.d.e.z.v.o.u.s</h1>
 	<hr />
 	<a href='new.html'>New Post</a> |
@@ -63,25 +123,17 @@
 				<p>alsdkfj asdfllkkasjflasdkf sdfkaskjflkasdjf
 					asdflaskfjladskfjsda f</p>
 			</td>
-			<td width="30%" valign="top">
-				<h2>Messages</h2>
-				<p>
-					<u>krishna | 31 DEC 2016 3.45PM</u><br />asdf adlfkajsf
-					asfllsdakfjsdad faslfdjasdfasf sdfllsdakfjs df
-				</p>
-				<p>
-					<u>krishna | 31 DEC 2016 3.45PM</u><br />asdf adlfkajsf
-					asfllsdakfjsdad faslfdjasdfasf sdfllsdakfjs df
-				</p>
-				<p>
-					<u>mohan | 30 DEC 2016 3.45PM</u><br />asdf adlfkajsf
-					asfllsdakfjsdad faslfdjasdfasf sdfllsdakfjs df
-				</p>
-				<hr /> <textarea></textarea><br />
-				<button>Post Message</button>
-			</td>
 		</tr>
 	</table>
+
+	<table id="responseTable" class="table table-bordered">
+
+	</table>
+	<input type="text" class="input-block-level"
+		placeholder="Your message..." id="message" style="height: 60px" />
+	<input type="submit" onclick="sendMessage()" class="btn btn-large btn-block btn-primary"
+		value="Send message" />
+
 
 </body>
 </html>
