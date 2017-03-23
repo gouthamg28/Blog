@@ -24,12 +24,16 @@ public class MainVerticle extends AbstractVerticle {
 	private static Router router;
 
 	public void start(Future<Void> future) throws Exception {
-		startServer("start()");
+		startServer("start()", vertx);
 	}
 
-	private static void startServer(String str)	{
-		System.out.println("starting...from "+str);
-		Vertx vertx = Vertx.vertx();
+	private static void startServer(String str, Vertx vertxArg)	{
+		System.out.println("starting...MainVerticle from "+str);
+		Vertx vertx = vertxArg;
+		if(vertx == null)	{
+			vertx = Vertx.vertx();
+		}
+		
 		router = Router.router(vertx);
 		vertx.deployVerticle(RegistrationVerticle.class.getName(), new DeploymentOptions().setWorker(true));
 		vertx.deployVerticle(LoginVerticle.class.getName(), new DeploymentOptions().setWorker(true));
@@ -64,9 +68,9 @@ public class MainVerticle extends AbstractVerticle {
 		
 		setUpdateCommentsHandler(vertx);
 		// ------------------------------------------//
-
-//		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
-		vertx.createHttpServer().requestHandler(router::accept).websocketHandler(new CustomWebSocketHandler()).listen(8080);
+System.out.println("MainVerticle.startServer() Blog verticle listening @ 8080");
+		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+//		vertx.createHttpServer().requestHandler(router::accept).websocketHandler(new CustomWebSocketHandler()).listen(8080);
 		
 		// ,
 		// result -> {
@@ -85,7 +89,7 @@ public class MainVerticle extends AbstractVerticle {
 //		JAuth.validateJoken(token);
 		
 		
-		startServer("main()");
+		startServer("main()", null);
 	}
 	
 	private static void setLoginHandler(Vertx vertx) {
@@ -153,8 +157,10 @@ System.out.println("MainVerticle.setProfileUpdateHandler() entered");
 		router.post(Paths.P_PROFILE_UPDATE).handler(rctx -> {
 			
 			System.out.println("MainVerticle.setProfileUpdateHandler() Got request");			
-//			printHTTPServerRequest(rctx);
+			printHTTPServerRequest(rctx);
 
+			System.out.println("MainVerticle.setProfileUpdateHandler() Body is "+rctx.getBodyAsJson());
+			
 			if(!validateToken(rctx))	{
 				rctx.response().setStatusCode(404).end("Token authentication failed for Profile update please Re-login");
 				return;
@@ -281,7 +287,7 @@ System.out.println("MainVerticle.setBlogFetchHandler() entered");
 	}
 
 	
-//	Performing token validation
+//	Performing token validation based on RoutingContext data
 	private static boolean validateToken(RoutingContext rctx)	{
 		boolean isValid = false;
 
@@ -295,6 +301,18 @@ System.out.println("MainVerticle.setBlogFetchHandler() entered");
 			if(TokenValidator.isValidToken(id, token, MongoService.getDataStore()))
 				isValid = true;
 		}
+		System.out.println("MainVerticle.validateToken() isValid = "+isValid);
+		return isValid;
+	}
+	
+//	Performing token validation based on id token passed
+	private static boolean validateToken(String id, String token)	{
+		boolean isValid = false;
+
+		System.out.println("MainVerticle.validateToken() id = "+id);
+		System.out.println("MainVerticle.validateToken() token = "+token);
+		if(TokenValidator.isValidToken(id, token, MongoService.getDataStore()))
+			isValid = true;
 		System.out.println("MainVerticle.validateToken() isValid = "+isValid);
 		return isValid;
 	}

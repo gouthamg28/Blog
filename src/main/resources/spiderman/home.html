@@ -19,9 +19,13 @@
          {
             if ("WebSocket" in window)
             {
-               // Let us open a web socket
-               ws = new WebSocket("ws://localhost:8080/chat");
-				
+            	id = "id=" + localStorage.getItem("ls-id")
+				token = "authToken=" + localStorage.getItem("ls-token")
+
+            	// Let us open a web socket
+               //ws = new WebSocket("ws://localhost:8080/chat");
+               ws = new WebSocket("ws://usernameg:pwdg@localhost:8085/chat?"+id+"&"+token);
+
                ws.onopen = function()
                {
                   // Web Socket is connected, send data using send()
