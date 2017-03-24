@@ -43,7 +43,7 @@ public class LoginVerticle extends AbstractVerticle {
 				.field("pwd").equal(loginData.getPwd());
 			final List<UserDetail> users = loginQuery.asList();
 			
-			System.out.println("LoginVerticle.handleLogin() users = "+users);
+//			System.out.println("LoginVerticle.handleLogin() users = "+users);
 			
 				
 			if(users == null || users.isEmpty()){

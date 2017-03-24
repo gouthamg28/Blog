@@ -94,7 +94,7 @@ public class BlogVerticle  extends AbstractVerticle {
 			final Query<Blog> blogFetchQuery = datastore.createQuery(Blog.class).order(Sort.descending("blogCreatedTimeStamp"));
 					
 			final List<Blog> blogs = blogFetchQuery.asList();
-			System.out.println("BlogVerticle.handleFetchRecentBlog() blogs = "+blogs);
+//			System.out.println("BlogVerticle.handleFetchRecentBlog() blogs = "+blogs);
 
 			Blog recentBlog = null;
 			if(blogs != null && blogs.size() > 0)	{

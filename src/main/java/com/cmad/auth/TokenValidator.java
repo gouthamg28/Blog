@@ -47,7 +47,7 @@ public class TokenValidator {
 				.field("token").equal(token);
 		final List<UserDetail> users = query.asList();
 
-		System.out.println("TokenValidator.isValidToken() users = "+users);
+//		System.out.println("TokenValidator.isValidToken() users = "+users);
 
 		if((users != null) && users.size() == 1)		{
 			boolean tokenAlive = JAuth.validateJoken(token);
